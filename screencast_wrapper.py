@@ -62,12 +62,14 @@ def ffmpeg_command(top_left, bottom_right, out_file, mute):
                          'capturing, but ffmpeg appears to be missing on '
                          'this system. Please install.')
 
+    disp = os.environ['DISPLAY']
+    
     width = bottom_right['x'] - top_left['x'] + 1
     height = bottom_right['y'] - top_left['y'] + 1
 
     cmd_line = [ffmpeg, '-f', 'x11grab', '-r', '10',
                 '-s', '{}x{}'.format(width, height),
-                '-i', ':0.0+{},{}'.format(top_left['x'], top_left['y'])]
+                '-i', '{}.0+{},{}'.format(disp, top_left['x'], top_left['y'])]
 
     if not mute:
         cmd_line.extend(['-f', 'pulse', '-ac', '2', '-i', 'default'])
@@ -212,6 +214,11 @@ def valid_capture_area(top_left, bottom_right):
 def setup_and_start_capture(out_file, mute):
     """Entry point for the 'capture' mode operation.
     """
+
+    if 'DISPLAY' not in os.environ:
+        print('DISPLAY not set; are you not in an X11 session?',
+              file=sys.stderr)
+        sys.exit(-1)
 
     if not re.search(r'.*\.[mM][kK][vV]$', out_file):
         print('Output file name needs to have a ".mkv" extension',
